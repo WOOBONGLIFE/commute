@@ -90,6 +90,7 @@ function renderProfile(profile) {
     employeeAppRole.textContent =
       profile.job_title ||
       "직급 미지정";
+    }
   }
 
 async function loadMyWorkplaces() {
