@@ -20,97 +20,7 @@ const noticeMoreBtn = document.getElementById("noticeMoreBtn");
 
 let currentEmployee = null;
 let todayAttendance = null;
-let appPermissions = null;
 
-async function loadAppPermissions() {
-  const token =
-    getEmployeeSessionToken();
-
-  if (!token) {
-    location.href =
-      "../employee/login.html";
-
-    return null;
-  }
-
-  const {
-    data,
-    error,
-  } = await supabase.rpc(
-    "get_my_app_permissions",
-    {
-      p_session_token:
-        token,
-    }
-  );
-
-  if (error) {
-    console.error(
-      "앱 권한 조회 실패:",
-      error
-    );
-
-    throw new Error(
-      "앱 권한 정보를 불러오지 못했습니다."
-    );
-  }
-
-  appPermissions =
-    data || null;
-
-  return appPermissions;
-}
-
-
-function applyAttendanceAccessUI() {
-  const canUseAttendance =
-    appPermissions
-      ?.can_use_attendance !==
-    false;
-
-  if (canUseAttendance) {
-    return true;
-  }
-
-  todayAttendance =
-    null;
-
-  if (attendanceBtn) {
-    attendanceBtn.hidden =
-      true;
-
-    attendanceBtn.disabled =
-      true;
-  }
-
-  if (workStatus) {
-    workStatus.textContent =
-      "출근부 제외";
-  }
-
-  if (buttonText) {
-    buttonText.textContent =
-      "출퇴근 사용 안 함";
-  }
-
-  if (checkInTime) {
-    checkInTime.textContent =
-      "--:--";
-  }
-
-  if (checkOutTime) {
-    checkOutTime.textContent =
-      "--:--";
-  }
-
-  setLocationStatus(
-    "청소 점검 전용 계정입니다.",
-    "출근부 제외",
-    "normal"
-  );
-
-  return false;
-}
 
 // 상단에 오늘 날짜 표시
 function setTodayDate() {
@@ -505,14 +415,6 @@ function getErrorMessage(error) {
     return "퇴근 처리할 출근 기록이 없습니다.";
   }
 
-  if (
-    message.includes(
-      "ATTENDANCE_EXEMPT"
-    )
-  ) {
-    return "출퇴근 대상이 아닌 계정입니다.";
-  }
-
   return "처리 중 오류가 발생했습니다.";
 }
 
@@ -895,32 +797,8 @@ async function init() {
 
   setTodayDate();
 
-  try {
-    await loadAppPermissions();
-  } catch (error) {
-    console.error(
-      "홈 권한 초기화 실패:",
-      error
-    );
-
-    alert(
-      error.message
-    );
-
-    return;
-  }
-
-  const canUseAttendance =
-    applyAttendanceAccessUI();
-
-  /*
-    출근부 포함 직원만
-    기록과 현재 위치를 조회합니다.
-  */
-  if (canUseAttendance) {
-    await loadTodayAttendance();
-    await loadLocationStatus();
-  }
+  await loadTodayAttendance();
+  await loadLocationStatus();
 
   noticeMoreBtn
     ?.addEventListener(
