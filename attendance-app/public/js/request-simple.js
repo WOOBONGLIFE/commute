@@ -67,6 +67,14 @@ function getErrorMessage(error) {
 
   if (
     message.includes(
+      "SUPPLY_REQUEST_PERMISSION_REQUIRED"
+    )
+  ) {
+    return "비품 요청 권한이 필요합니다.";
+  }
+
+  if (
+    message.includes(
       "INVALID_SESSION"
     )
   ) {
@@ -602,14 +610,19 @@ async function init() {
     return;
   }
 
+  const canUseLeadFeature =
+    employee.app_role ===
+      "team_lead" ||
+    employee.app_role ===
+      "checklist_admin";
+
   if (
     document.body.dataset
       .leadOnly === "true" &&
-    employee.app_role !==
-      "team_lead"
+    !canUseLeadFeature
   ) {
     alert(
-      "팀장만 사용할 수 있는 기능입니다."
+      "이 기능을 사용할 권한이 없습니다."
     );
 
     location.replace(
@@ -635,6 +648,5 @@ async function init() {
     submitRequest
   );
 }
-
 
 init();

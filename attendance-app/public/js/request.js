@@ -82,7 +82,10 @@ async function init() {
       ".request-menu-card.lead-only"
     )
     .forEach((link) => {
-      if (isTeamLead) {
+      if (
+        isTeamLead ||
+        isChecklistAdmin
+      ) {
         link.classList.remove(
           "locked"
         );
@@ -109,7 +112,7 @@ async function init() {
           event.preventDefault();
 
           alert(
-            "비품 요청은 팀장 권한이 필요합니다."
+            "비품 요청 권한이 필요합니다."
           );
         }
       );
