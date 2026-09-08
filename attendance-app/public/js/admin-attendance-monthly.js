@@ -2096,7 +2096,7 @@ async function printEmployeeMonthlyAttendance(
         </main>
       `,
     },
-    "size: A4 portrait;"
+    "size: A4 landscape;"
   );
 }
 
