@@ -789,12 +789,15 @@ async function init() {
     return;
   }
 
-  if (
-    employee.app_role !==
-    "team_lead"
-  ) {
+  const canUseChecklist =
+    employee.app_role ===
+      "team_lead" ||
+    employee.app_role ===
+      "checklist_admin";
+
+  if (!canUseChecklist) {
     alert(
-      "팀장만 사용할 수 있습니다."
+      "청소점검 권한이 없습니다."
     );
 
     location.replace(
@@ -809,7 +812,7 @@ async function init() {
     error:
       workplaceError,
   } = await supabase.rpc(
-    "get_my_workplaces",
+    "get_my_checklist_workplaces",
     {
       p_session_token:
         getEmployeeSessionToken(),
@@ -818,24 +821,24 @@ async function init() {
 
   if (workplaceError) {
     console.error(
-      "배정 현장 조회 실패:",
+      "점검 현장 조회 실패:",
       workplaceError
     );
 
     alert(
-      "배정 현장을 불러오지 못했습니다."
+      "점검 현장을 불러오지 못했습니다."
     );
 
     return;
   }
 
-  const assignedWorkplaces =
+  const availableWorkplaces =
     Array.isArray(workplaces)
       ? workplaces
       : [];
 
   workplaceSelect.innerHTML =
-    assignedWorkplaces
+    availableWorkplaces
       .map((workplace) => {
         const workplaceId =
           workplace.workplace_id ??
@@ -850,34 +853,54 @@ async function init() {
 
         return `
           <option
-            value="${escapeHtml(workplaceId)}"
+            value="${escapeHtml(
+              workplaceId
+            )}"
           >
-            ${escapeHtml(workplaceName)}
+            ${escapeHtml(
+              workplaceName
+            )}
           </option>
         `;
       })
       .join("");
 
-  if (!assignedWorkplaces.length) {
+  if (
+    !availableWorkplaces.length
+  ) {
+    const emptyMessage =
+      employee.app_role ===
+      "checklist_admin"
+        ? `
+          현재 등록된 활성 현장이
+          없습니다.
+        `
+        : `
+          관리자 웹의 직원 관리에서
+          이 계정에 근무지를 먼저
+          배정해 주세요.
+        `;
+
     workplaceSelect.innerHTML = `
       <option value="">
-        배정된 현장이 없습니다
+        선택 가능한 현장이 없습니다
       </option>
     `;
 
-    workplaceSelect.disabled = true;
+    workplaceSelect.disabled =
+      true;
 
     checklistList.innerHTML = `
       <p class="checklist-empty">
-        관리자 웹의 직원 관리에서
-        이 계정에 근무지를 먼저 배정해 주세요.
+        ${emptyMessage}
       </p>
     `;
 
     return;
   }
 
-  workplaceSelect.disabled = false;
+  workplaceSelect.disabled =
+    false;
 
   workplaceSelect.addEventListener(
     "change",
@@ -888,17 +911,17 @@ async function init() {
     .getElementById(
       "addChecklistItemBtn"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
       addChecklistItem
     );
 
-  photoInput.addEventListener(
+  photoInput?.addEventListener(
     "change",
     handlePhotoSelection
   );
 
-  submitButton.addEventListener(
+  submitButton?.addEventListener(
     "click",
     submitChecklist
   );
@@ -907,6 +930,5 @@ async function init() {
 
   await loadItems();
 }
-
 
 init();

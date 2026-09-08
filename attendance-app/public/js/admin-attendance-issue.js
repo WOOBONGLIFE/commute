@@ -287,9 +287,22 @@ async function fetchIssueData() {
     supabase
       .from("users")
       .select(
-        "id, name, department, status"
+        `
+          id,
+          name,
+          department,
+          status,
+          attendance_exempt
+        `
       )
-      .eq("status", "active"),
+      .eq(
+        "status",
+        "active"
+      )
+      .eq(
+        "attendance_exempt",
+        false
+      ),
 
     supabase
       .from("attendance")
@@ -303,7 +316,8 @@ async function fetchIssueData() {
         status,
         users (
           name,
-          department
+          department,
+          attendance_exempt
         ),
         workplaces (
           name
@@ -391,7 +405,15 @@ async function fetchIssueData() {
     userResult.data || [];
 
   const attendanceData =
-    attendanceResult.data || [];
+    (
+      attendanceResult.data ||
+      []
+    ).filter(
+      (attendance) =>
+        attendance.users
+          ?.attendance_exempt !==
+        true
+    );
 
   const shiftStartMap =
     new Map(
@@ -687,10 +709,28 @@ async function fetchIssueData() {
           "미확인",
       }));
 
-  locationErrors =
-    (
-      locationResult.data || []
-    ).map((item) => {
+const attendanceIncludedUserIds =
+  new Set(
+    allUsers.map(
+      (user) =>
+        String(user.id)
+    )
+  );
+
+locationErrors =
+  (
+    locationResult.data || []
+  )
+    .filter(
+      (item) =>
+        attendanceIncludedUserIds
+          .has(
+            String(
+              item.user_id
+            )
+          )
+    )
+    .map((item) => {
       const distance =
         item.distance_m === null ||
         item.distance_m === undefined
@@ -713,7 +753,9 @@ async function fetchIssueData() {
       if (
         distance !== null &&
         allowedRadius !== null &&
-        Number.isFinite(distance) &&
+        Number.isFinite(
+          distance
+        ) &&
         Number.isFinite(
           allowedRadius
         )
@@ -771,8 +813,8 @@ async function fetchIssueData() {
               : "범위 밖",
       };
     });
-    
-  await applyMonthlyLateCount();
+
+await applyMonthlyLateCount();
 }
 
 async function applyMonthlyLateCount() {

@@ -288,7 +288,10 @@ async function fetchBaseData() {
         department,
         status
       `)
-      .neq("status", "deleted")
+      .neq(
+        "status",
+        "deleted"
+      )
       .order("name", {
         ascending: true,
       }),
@@ -419,8 +422,7 @@ async function fetchMonthlyData() {
     attendanceResult.data || [];
 
   leaveRecords =
-    leaveResult.data || [];
-}
+    leaveResult.data || [];}
 
 /* =========================
   직원별 집계

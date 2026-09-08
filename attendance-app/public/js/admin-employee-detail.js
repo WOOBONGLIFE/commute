@@ -611,11 +611,19 @@ function renderProfileUI(employee) {
       employee.phone || "—";
   }
 
-  const roleText =
-    employee.app_role ===
-    "team_lead"
-      ? "팀장"
-      : "사원";
+  const roleText = {
+    employee:
+      "일반 직원",
+
+    team_lead:
+      "팀장",
+
+    checklist_admin:
+      "점검 관리자",
+  }[
+    employee.app_role ||
+    "employee"
+  ] || "일반 직원";
 
   if (detailAppRole) {
     detailAppRole.textContent =
@@ -2396,6 +2404,10 @@ async function saveEmployeeProfile(
         department,
         app_role:
           appRole,
+
+        attendance_exempt:
+          attendanceExempt,
+
         status:
           nextStatus,
         memo,

@@ -177,7 +177,10 @@ async function fetchTodayAttendance() {
         .select(
           "id, name, phone, department"
         )
-        .eq("status", "active"),
+        .eq(
+          "status",
+          "active"
+        ),
 
       supabase
         .from("attendance")
@@ -244,7 +247,7 @@ async function fetchTodayAttendance() {
 
     const attendanceData =
       attendanceResult.data || [];
-
+      
     const workplaceAssignments =
       assignmentResult.data || [];
 
@@ -681,7 +684,8 @@ async function loadMonthlyLateEmployees() {
           work_date,
           users (
             name,
-            department
+            department,
+            attendance_exempt
           ),
           workplaces (
             name
