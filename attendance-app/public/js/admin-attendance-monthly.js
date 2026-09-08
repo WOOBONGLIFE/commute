@@ -1728,32 +1728,33 @@ async function printEmployeeMonthlyAttendance(
     endDate,
   } = getSelectedMonthInfo();
 
-  const { data: noteData, error } =
-    await supabase
-      .from(
-        "employee_daily_notes"
-      )
-      .select(`
-        note_date,
-        content,
-        day_type
-      `)
-      .eq(
-        "user_id",
-        userId
-      )
-      .gte(
-        "note_date",
-        startDate
-      )
-      .lt(
-        "note_date",
-        endDate
-      );
+  const {
+    data: noteData,
+    error,
+  } = await supabase
+    .from(
+      "employee_daily_notes"
+    )
+    .select(`
+      note_date,
+      day_type
+    `)
+    .eq(
+      "user_id",
+      userId
+    )
+    .gte(
+      "note_date",
+      startDate
+    )
+    .lt(
+      "note_date",
+      endDate
+    );
 
   if (error) {
     console.error(
-      "직원 기타사항 조회 실패:",
+      "직원 연차 조회 실패:",
       error
     );
 
@@ -1764,28 +1765,32 @@ async function printEmployeeMonthlyAttendance(
     return;
   }
 
-  const noteMap =
-    new Map(
-      (noteData || []).map(
-        (note) => [
-          note.note_date,
-          note,
-        ]
-      )
-    );
-
-  const employeeAttendance =
-    attendanceRecords.filter(
-      (record) =>
-        String(record.user_id) ===
-        String(userId)
+  const annualLeaveDates =
+    new Set(
+      (noteData || [])
+        .filter(
+          (note) =>
+            note.day_type ===
+            "annual_leave"
+        )
+        .map(
+          (note) =>
+            note.note_date
+        )
     );
 
   const attendanceMap =
     new Map();
 
-  employeeAttendance.forEach(
-    (record) => {
+  attendanceRecords
+    .filter(
+      (record) =>
+        String(
+          record.user_id
+        ) ===
+        String(userId)
+    )
+    .forEach((record) => {
       const existing =
         attendanceMap.get(
           record.work_date
@@ -1803,39 +1808,45 @@ async function printEmployeeMonthlyAttendance(
           record
         );
       }
-    }
-  );
+    });
 
   const workplaceMap =
     new Map(
       workplaces.map(
         (workplace) => [
-          String(workplace.id),
+          String(
+            workplace.id
+          ),
           workplace.name,
         ]
       )
     );
 
-  const assignedNames =
-    workplaceAssignments
-      .filter(
-        (assignment) =>
-          String(
-            assignment.user_id
-          ) === String(userId)
-      )
-      .map((assignment) =>
-        workplaceMap.get(
-          String(
-            assignment.workplace_id
-          )
+  const assignedNames = [
+    ...new Set(
+      workplaceAssignments
+        .filter(
+          (assignment) =>
+            String(
+              assignment.user_id
+            ) ===
+            String(userId)
         )
-      )
-      .filter(Boolean);
+        .map(
+          (assignment) =>
+            workplaceMap.get(
+              String(
+                assignment
+                  .workplace_id
+              )
+            )
+        )
+        .filter(Boolean)
+    ),
+  ];
 
-  let totalWorkMinutes = 0;
-
-  const rows = [];
+  const dayCells = [];
+  const timeCells = [];
 
   for (
     let day = 1;
@@ -1849,254 +1860,286 @@ async function printEmployeeMonthlyAttendance(
         day
       );
 
-    const weekDay =
-      getKoreanDayOfWeek(
-        dateKey
-      );
-
     const record =
       attendanceMap.get(
         dateKey
       );
 
-    const note =
-      noteMap.get(
+    const isAnnualLeave =
+      annualLeaveDates.has(
         dateKey
       );
 
-    const isAnnualLeave =
-      note?.day_type ===
-      "annual_leave";
-
-    const workMinutes =
+    const annualLeaveClass =
       isAnnualLeave
-        ? 0
-        : calculateWorkMinutes(
-            record
-              ?.check_in_time,
-            record
-              ?.check_out_time
-          );
-
-    totalWorkMinutes +=
-      workMinutes;
-
-    const timeCellClass =
-      isAnnualLeave
-        ? "annual-leave-cell"
-        : isLateStatus(
-            record?.status
-          )
-          ? "late-cell"
-          : "";
-
-    const rowClass =
-      weekDay === "토" ||
-      weekDay === "일"
-        ? "weekend"
+        ? "annual-leave-day"
         : "";
 
-    rows.push(`
-      <tr class="${rowClass}">
-        <td>
-          ${month}.${String(
-            day
-          ).padStart(2, "0")}
-        </td>
+    dayCells.push(`
+      <td class="${annualLeaveClass}">
+        ${day}
+      </td>
+    `);
 
-        <td>
-          ${weekDay}
-        </td>
+    let timeContent = "";
 
-        <td class="${timeCellClass}">
-          ${
-            isAnnualLeave
-              ? `
-                <strong>
-                  연차
-                </strong>
-              `
-              : `
-                <div class="attendance-time-pair">
-                  <span>
-                    ${escapeHtml(
-                      formatTimeOnly(
-                        record
-                          ?.check_in_time
-                      )
-                    ) || "—"}
-                  </span>
+    if (isAnnualLeave) {
+      timeContent = `
+        <strong>연</strong>
+      `;
+    } else {
+      const checkIn =
+        formatTimeOnly(
+          record?.check_in_time
+        );
 
-                  <span>
-                    ${escapeHtml(
-                      formatTimeOnly(
-                        record
-                          ?.check_out_time
-                      )
-                    ) || "—"}
-                  </span>
-                </div>
-              `
-          }
-        </td>
+      const checkOut =
+        formatTimeOnly(
+          record?.check_out_time
+        );
 
-        <td>
-          ${
-            workMinutes
-              ? escapeHtml(
-                  formatWorkMinutes(
-                    workMinutes
-                  )
-                )
-              : ""
-          }
-        </td>
+      timeContent = `
+        <span>
+          ${escapeHtml(checkIn)}
+        </span>
 
-        <td class="note-column">
-          ${escapeHtml(
-            note?.content ||
-            record?.memo ||
-            ""
-          )}
-        </td>
-      </tr>
+        <span>
+          ${escapeHtml(checkOut)}
+        </span>
+      `;
+    }
+
+    timeCells.push(`
+      <td class="${annualLeaveClass}">
+        ${timeContent}
+      </td>
     `);
   }
 
+  const workplaceNames =
+    assignedNames.join(", ") ||
+    "미배정";
+
   const title =
-    `${year}년 ${month}월 출근부`;
+    "월별 출퇴근표";
+
+  const periodStart =
+    createDateKey(
+      year,
+      month,
+      1
+    );
+
+  const periodEnd =
+    createDateKey(
+      year,
+      month,
+      daysInMonth
+    );
 
   openPrintWindow(
     title,
     {
       styles: `
-        .employee-table {
-          font-size: 7.5pt;
+        .monthly-report {
+          width: 100%;
+          color: #000000;
         }
 
-        .employee-table th {
-          height: 6mm;
-          padding: 1mm;
+        .monthly-report-title {
+          margin: 0 0 8px;
+          color: #000000;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.2;
+          text-align: center;
         }
 
-        .employee-table td {
-          height: 7.7mm;
-          padding: 1.1mm 1mm;
+        .monthly-report-period {
+          margin: 0 0 3px;
+          color: #000000;
+          font-size: 8px;
+          line-height: 1.2;
+          text-align: right;
         }
 
-        .employee-table th:nth-child(1),
-        .employee-table td:nth-child(1) {
-          width: 12%;
+        .monthly-report-table {
+          width: 100%;
+          margin: 0;
+          border: 1px solid #000000;
+          border-collapse: collapse;
+          table-layout: fixed;
         }
 
-        .employee-table th:nth-child(2),
-        .employee-table td:nth-child(2) {
-          width: 8%;
+        .monthly-report-table td {
+          padding: 0;
+          border: 1px solid #000000;
+          background: #ffffff;
+          color: #000000;
+          text-align: center;
+          vertical-align: middle;
         }
 
-        .employee-table th:nth-child(3),
-        .employee-table td:nth-child(3) {
-          width: 22%;
+        .employee-block {
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
 
-        .employee-table th:nth-child(4),
-        .employee-table td:nth-child(4) {
-          width: 18%;
+        .employee-info-row td {
+          height: 22px;
+          padding: 0 8px;
+          text-align: left;
         }
 
-        .employee-table th:nth-child(5),
-        .employee-table td:nth-child(5) {
-          width: 40%;
-        }
-
-        .attendance-time-pair {
+        .employee-info-content {
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 1.2mm;
-
-          line-height: 1.2;
+          justify-content:
+            space-between;
+          gap: 24px;
+          width: 100%;
+          font-size: 8px;
           white-space: nowrap;
         }
 
-        .attendance-time-pair span {
-          display: inline;
+        .employee-info-content span {
+          flex: 1;
         }
 
-        .attendance-time-pair
-        span + span::before {
-          content: "~";
-          margin-right: 1.2mm;
+        .employee-info-content
+        span:nth-child(2) {
+          text-align: center;
         }
-          
-        .note-column {
-          text-align: left;
-          padding-left: 2mm !important;
+
+        .employee-info-content
+        span:nth-child(3) {
+          text-align: right;
+        }
+
+        .employee-info-content strong {
+          margin-left: 4px;
+          font-size: 8px;
+          font-weight: 700;
+        }
+
+        .employee-day-row td {
+          height: 18px;
+          font-size: 6px;
+          font-weight: 700;
+          line-height: 1;
+        }
+
+        .employee-time-row td {
+          height: 32px;
+          padding: 2px 0;
+          font-size: 7px;
+          line-height: 1.2;
+        }
+
+        .employee-time-row span {
+          display: block;
+          min-height: 10px;
+          font-size: 7px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
+        .employee-time-row strong {
+          display: inline-block;
+          font-size: 9px;
+          font-weight: 800;
+          line-height: 28px;
+          white-space: nowrap;
+        }
+
+        .monthly-report-table
+        .annual-leave-day {
+          background: #fff2a8;
+          color: #000000;
+
+          print-color-adjust: exact;
+          -webkit-print-color-adjust:
+            exact;
         }
       `,
 
       html: `
-        <main class="print-document">
-          <header class="print-header">
-            <h1>
-              ${escapeHtml(title)}
-            </h1>
+        <main class="monthly-report">
+          <h1 class="monthly-report-title">
+            ${escapeHtml(title)}
+          </h1>
 
-            <p>
-              소속:
-              ${escapeHtml(
-                employee.department ||
-                "소속 미지정"
-              )}
-              |
-              성명:
-              ${escapeHtml(
-                employee.name ||
-                "이름 없음"
-              )}
-              |
-              근무지:
-              ${escapeHtml(
-                [
-                  ...new Set(
-                    assignedNames
-                  ),
-                ].join(", ") ||
-                "미배정"
-              )}
-            </p>
-          </header>
+          <p class="monthly-report-period">
+            근무기간:
+            ${escapeHtml(
+              periodStart
+            )}
+            ~
+            ${escapeHtml(
+              periodEnd
+            )}
+          </p>
 
-          <table class="employee-table">
-            <thead>
-              <tr>
-                <th>일자</th>
-                <th>요일</th>
-                <th>출퇴근 시간</th>
-                <th>시간합계</th>
-                <th>기타사항</th>
+          <table class="monthly-report-table">
+            <colgroup>
+              ${Array.from(
+                {
+                  length:
+                    daysInMonth,
+                },
+                () => "<col />"
+              ).join("")}
+            </colgroup>
+
+            <tbody class="employee-block">
+              <tr class="employee-info-row">
+                <td colspan="${daysInMonth}">
+                  <div class="employee-info-content">
+                    <span>
+                      이름:
+                      <strong>
+                        ${escapeHtml(
+                          employee.name ||
+                          "이름 없음"
+                        )}
+                      </strong>
+                    </span>
+
+                    <span>
+                      현장:
+                      <strong>
+                        ${escapeHtml(
+                          workplaceNames
+                        )}
+                      </strong>
+                    </span>
+
+                    <span>
+                      소속:
+                      <strong>
+                        ${escapeHtml(
+                          employee.department ||
+                          "소속 미지정"
+                        )}
+                      </strong>
+                    </span>
+                  </div>
+                </td>
               </tr>
-            </thead>
 
-            <tbody>
-              ${rows.join("")}
+              <tr class="employee-day-row">
+                ${dayCells.join("")}
+              </tr>
+
+              <tr class="employee-time-row">
+                ${timeCells.join("")}
+              </tr>
             </tbody>
           </table>
-
-          <div class="print-signature">
-            총 근무시간:
-            <strong>
-              ${escapeHtml(
-                formatWorkMinutes(
-                  totalWorkMinutes
-                )
-              )}
-            </strong>
-          </div>
         </main>
       `,
     },
-    "size: A4 landscape;"
+    "size: 297mm 210mm;"
   );
 }
 
@@ -2551,7 +2594,7 @@ function printWorkplaceMonthlyAttendance(
         </main>
       `,
     },
-    "size: A4 portrait;"
+    "size: A4 landscape;"
   );
 }
 

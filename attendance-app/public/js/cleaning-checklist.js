@@ -124,36 +124,57 @@ function renderPhotos() {
   photoList.innerHTML =
     selectedPhotos
       .map(
-        (photo) => `
+        (photo, index) => `
           <article class="checklist-photo-item">
-            <img
-              src="${photo.previewUrl}"
-              alt="현장 사진 미리보기"
-            >
+            <div class="checklist-photo-preview">
+              <img
+                src="${photo.previewUrl}"
+                alt="현장 사진 미리보기"
+              >
 
-            ${
-              photo.uploaded
-                ? `
-                  <span class="checklist-photo-complete">
-                    업로드 완료
-                  </span>
-                `
-                : `
-                  <button
-                    type="button"
-                    data-remove-photo="${photo.id}"
-                    aria-label="사진 삭제"
-                  >
-                    ×
-                  </button>
-                `
-            }
+              ${
+                photo.uploaded
+                  ? `
+                    <span class="checklist-photo-complete">
+                      업로드 완료
+                    </span>
+                  `
+                  : `
+                    <button
+                      type="button"
+                      data-remove-photo="${photo.id}"
+                      aria-label="사진 삭제"
+                    >
+                      ×
+                    </button>
+                  `
+              }
 
-            <small>
-              ${formatFileSize(
-                photo.file.size
-              )}
-            </small>
+              <small>
+                ${formatFileSize(
+                  photo.file.size
+                )}
+              </small>
+            </div>
+
+            <label class="checklist-photo-caption">
+              사진 이름
+
+              <input
+                type="text"
+                maxlength="100"
+                placeholder="예: 화장실 세면대"
+                value="${escapeHtml(
+                  photo.caption || ""
+                )}"
+                data-photo-caption="${photo.id}"
+                ${
+                  photo.uploaded
+                    ? "disabled"
+                    : ""
+                }
+              >
+            </label>
           </article>
         `
       )
@@ -176,8 +197,35 @@ function renderPhotos() {
         );
       }
     );
-}
 
+  photoList
+    .querySelectorAll(
+      "[data-photo-caption]"
+    )
+    .forEach(
+      (input) => {
+        input.addEventListener(
+          "input",
+          () => {
+            const photo =
+              selectedPhotos.find(
+                (item) =>
+                  item.id ===
+                  input.dataset
+                    .photoCaption
+              );
+
+            if (!photo) {
+              return;
+            }
+
+            photo.caption =
+              input.value;
+          }
+        );
+      }
+    );
+}
 
 function removePhoto(photoId) {
   const targetPhoto =
@@ -559,6 +607,36 @@ async function submitChecklist() {
   ) {
     alert(
       "점검 현장을 선택해 주세요."
+    );
+
+    return;
+  }
+
+  const unnamedPhoto =
+    selectedPhotos.find(
+      (photo) =>
+        !photo.uploaded &&
+        !String(
+          photo.caption || ""
+        ).trim()
+    );
+
+  if (unnamedPhoto) {
+    const captionInput =
+      photoList.querySelector(
+        `[data-photo-caption="${unnamedPhoto.id}"]`
+      );
+
+    captionInput?.focus();
+
+    captionInput
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+    alert(
+      "첨부한 사진마다 사진 이름을 입력해 주세요."
     );
 
     return;

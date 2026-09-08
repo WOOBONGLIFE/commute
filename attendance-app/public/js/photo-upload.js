@@ -277,6 +277,8 @@ export async function preparePhotos(
           compressedFile
         ),
 
+      caption: "",
+
       uploaded: false,
     });
   }
@@ -385,6 +387,13 @@ export async function uploadPhotos({
     formData.append(
       "parent_id",
       parentId
+    );
+
+    formData.append(
+      "photo_caption",
+      String(
+        photo.caption || ""
+      ).trim()
     );
 
     formData.append(
