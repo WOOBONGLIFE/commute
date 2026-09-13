@@ -1070,16 +1070,19 @@ body[data-admin-page="requests"]
 
   body.checklist-detail-printing
   .checklist-detail-photo-list {
-    display: grid;
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-    gap: 10mm 8mm;
+    display: block;
   }
 
   body.checklist-detail-printing
   .checklist-detail-photo-card {
+    display: block;
+    width: 100%;
+    margin: 0 0 10mm;
     overflow: visible;
-    border: 1px solid #9ca3af;
+
+    border:
+      1px solid #9ca3af;
+
     border-radius: 0;
     box-shadow: none;
 
@@ -1091,22 +1094,47 @@ body[data-admin-page="requests"]
   .checklist-detail-photo-preview {
     display: flex;
     width: 100%;
-    min-height: 55mm;
-    max-height: 105mm;
+    min-height: 0;
+    max-height: none;
+
     aspect-ratio: auto;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+
+    overflow: visible;
     background: #ffffff;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   body.checklist-detail-printing
   .checklist-detail-photo-preview img {
     display: block;
-    width: 100%;
+
+    width: auto;
+    max-width: 100%;
+
     height: auto;
-    max-height: 105mm;
+    max-height: 230mm;
+
+    margin: 0 auto;
+
     object-fit: contain;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-card {
+    overflow: visible;
+    border: 1px solid #9ca3af;
+    border-radius: 0;
+    box-shadow: none;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   body.checklist-detail-printing
@@ -1515,4 +1543,242 @@ body[data-admin-page="requests"]
   border-color: #111827;
   background: #111827;
   color: #ffffff;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  /*
+    관리자 기본 화면은 공간까지 완전히 제거합니다.
+  */
+  body.checklist-detail-printing
+  .admin-layout {
+    display: none !important;
+  }
+
+  body.checklist-detail-printing {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  /*
+    팝업의 화면용 고정 위치와
+    스크롤 제한을 모두 해제합니다.
+  */
+  body.checklist-detail-printing
+  #checklistDetailModal {
+    position: static !important;
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+
+    visibility: visible !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-panel {
+    display: block !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    height: auto !important;
+    max-height: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+
+    visibility: visible !important;
+  }
+
+  /*
+    팝업 제목줄과 버튼 영역은
+    인쇄하지 않습니다.
+  */
+  body.checklist-detail-printing
+  .checklist-detail-modal-header,
+  body.checklist-detail-printing
+  .checklist-detail-actions {
+    display: none !important;
+  }
+
+  body.checklist-detail-printing
+  #checklistDetailPrintArea {
+    position: static !important;
+    inset: auto !important;
+
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+    background: #ffffff !important;
+
+    visibility: visible !important;
+  }
+
+  body.checklist-detail-printing
+  #checklistDetailPrintArea,
+  body.checklist-detail-printing
+  #checklistDetailPrintArea * {
+    visibility: visible !important;
+  }
+
+  /*
+    체크리스트 표가 페이지 중간에서
+    잘리지 않게 합니다.
+  */
+  body.checklist-detail-printing
+  .checklist-detail-table {
+    width: 100% !important;
+
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-table tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /*
+    사진은 체크리스트 다음 페이지부터 시작합니다.
+  */
+  body.checklist-detail-printing
+  .checklist-detail-photos {
+    display: block !important;
+
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border-top: 0 !important;
+
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-header {
+    margin: 0 0 6mm !important;
+    padding-top: 0 !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-list {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /*
+    사진과 사진 이름을 한 덩어리로
+    다음 페이지에 넘깁니다.
+  */
+  body.checklist-detail-printing
+  .checklist-detail-photo-card {
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    margin: 0 0 10mm !important;
+
+    overflow: visible !important;
+
+    border:
+      1px solid #9ca3af !important;
+
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-preview {
+    display: flex !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    aspect-ratio: auto !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    background: #ffffff !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-preview img {
+    display: block !important;
+
+    width: auto !important;
+    max-width: 100% !important;
+
+    height: auto !important;
+    max-height: 235mm !important;
+
+    margin: 0 auto !important;
+
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-info {
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    padding: 7px 9px !important;
+
+    border-top:
+      1px solid #d1d5db !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-actions {
+    display: none !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-preview::after {
+    content: none !important;
+  }
 }

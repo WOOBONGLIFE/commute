@@ -1418,6 +1418,15 @@ function renderChecklistDetailPhotos() {
           photo.file_name ||
           `현장사진-${index + 1}.jpg`;
 
+        const photoCaption =
+          String(
+            photo.photo_caption || ""
+          ).trim();
+
+        const displayName =
+          photoCaption ||
+          `사진 ${index + 1}`;
+
         const fileSize =
           photo.file_size ??
           photo.size_bytes ??
@@ -1457,12 +1466,18 @@ function renderChecklistDetailPhotos() {
             <div class="checklist-detail-photo-info">
               <div>
                 <strong title="${escapeHtml(
-                  originalName
+                  displayName
                 )}">
-                  사진 ${index + 1}
+                  ${escapeHtml(
+                    displayName
+                  )}
                 </strong>
 
                 <small>
+                  ${escapeHtml(
+                    originalName
+                  )}
+                  ·
                   ${formatPhotoFileSize(
                     fileSize
                   )}

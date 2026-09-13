@@ -3,7 +3,7 @@ import supabase from "./supabase.js";
 import {
   getCurrentEmployee,
   getEmployeeSessionToken,
-} from "./employeeAuth.js";
+} from "./employeeAuth.js?v=31";
 
 import {
   preparePhotos,
