@@ -864,7 +864,14 @@ function updateAttendanceToggleButton(
     return;
   }
 
-  if (totalRows <= 5) {
+  /*
+    월간 근무표는 항상
+    해당 월 전체 날짜를 표시합니다.
+  */
+  if (
+    viewMode === "monthly" ||
+    totalRows <= 5
+  ) {
     toggleAttendanceRowsBtn.hidden =
       true;
 
@@ -877,7 +884,7 @@ function updateAttendanceToggleButton(
   toggleAttendanceRowsBtn.textContent =
     attendanceExpanded
       ? "최근 5일만 보기"
-      : "전체 월 보기";
+      : "전체 기록 보기";
 }
 
 function renderAttendanceTable(
@@ -974,6 +981,7 @@ function renderAttendanceTable(
           "annual_leave";
 
         const isCollapsed =
+          viewMode !== "monthly" &&
           !attendanceExpanded &&
           !recentDateKeys.has(
             dateKey

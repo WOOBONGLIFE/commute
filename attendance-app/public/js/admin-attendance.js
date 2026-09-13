@@ -448,7 +448,13 @@ async function fetchTodayAttendance() {
             user.department ||
             "부서 없음",
 
-          region: "연차",
+          region:
+            assignedRegionMap
+              .get(
+                String(user.id)
+              )
+              ?.join(", ") ||
+            "미배정",
 
           checkIn: "—",
           checkOut: "—",
