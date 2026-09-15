@@ -314,7 +314,18 @@
 
         <section class="checklist-detail-note">
           <strong>점검 메모</strong>
-          <p id="checklistDetailNote">-</p>
+
+          <p id="checklistDetailNote">
+            -
+          </p>
+
+          <textarea
+            id="checklistDetailNoteInput"
+            rows="4"
+            maxlength="1000"
+            placeholder="점검 메모를 입력하세요."
+            hidden
+          ></textarea>
         </section>
 
         <section class="checklist-detail-photos">
@@ -328,6 +339,37 @@
               0장
             </span>
           </div>
+
+          <div
+            id="checklistDetailPhotoEditTools"
+            class="checklist-detail-photo-edit-tools"
+            hidden
+          >
+            <label
+              for="checklistDetailPhotoInput"
+              class="checklist-detail-photo-add-button"
+            >
+              사진 추가
+            </label>
+
+            <input
+              id="checklistDetailPhotoInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              hidden
+            />
+
+            <span id="checklistDetailPendingPhotoCount">
+              추가할 사진 없음
+            </span>
+          </div>
+
+          <div
+            id="checklistDetailPendingPhotoList"
+            class="checklist-detail-pending-photo-list"
+            hidden
+          ></div>
 
           <div
             id="checklistDetailPhotoList"
@@ -346,6 +388,29 @@
           type="button"
         >
           닫기
+        </button>
+
+        <button
+          id="checklistDetailEditCancelBtn"
+          type="button"
+          hidden
+        >
+          수정 취소
+        </button>
+
+        <button
+          id="checklistDetailEditBtn"
+          type="button"
+        >
+          수정
+        </button>
+
+        <button
+          id="checklistDetailSaveBtn"
+          type="button"
+          hidden
+        >
+          변경 저장
         </button>
 
         <button

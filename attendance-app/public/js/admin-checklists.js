@@ -146,6 +146,26 @@ const checklistDetailNote =
     "checklistDetailNote"
   );
 
+const checklistDetailNoteInput =
+  document.getElementById(
+    "checklistDetailNoteInput"
+  );
+
+const checklistDetailEditBtn =
+  document.getElementById(
+    "checklistDetailEditBtn"
+  );
+
+const checklistDetailEditCancelBtn =
+  document.getElementById(
+    "checklistDetailEditCancelBtn"
+  );
+
+const checklistDetailSaveBtn =
+  document.getElementById(
+    "checklistDetailSaveBtn"
+  );
+
 const checklistDetailPhotoCount =
   document.getElementById(
     "checklistDetailPhotoCount"
@@ -156,10 +176,40 @@ const checklistDetailPhotoList =
     "checklistDetailPhotoList"
   );
 
+const checklistDetailPhotoEditTools =
+  document.getElementById(
+    "checklistDetailPhotoEditTools"
+  );
+
+const checklistDetailPhotoInput =
+  document.getElementById(
+    "checklistDetailPhotoInput"
+  );
+
+const checklistDetailPendingPhotoCount =
+  document.getElementById(
+    "checklistDetailPendingPhotoCount"
+  );
+
+const checklistDetailPendingPhotoList =
+  document.getElementById(
+    "checklistDetailPendingPhotoList"
+  );
+
 let currentChecklistPhotos = [];
+
+let pendingChecklistPhotos = [];
 
 let openedChecklistSubmissionId =
   null;
+
+let openedChecklistSubmission =
+  null;
+
+let currentChecklistResults = [];
+
+let isChecklistEditing =
+  false;
 
 let appCustomItems = [];
 let assignedItemOrder = [];
@@ -1293,6 +1343,10 @@ function getSubmissionItemResults(
               item.id || ""
             ),
 
+          source:
+            item.source ||
+            "assigned",
+
           label:
             item.label ||
             commonItemMap.get(
@@ -1317,6 +1371,9 @@ function getSubmissionItemResults(
       return {
         id:
           String(item),
+
+        source:
+          "assigned",
 
         label:
           commonItemMap.get(
@@ -1990,6 +2047,223 @@ async function deleteChecklistSubmission(
   }
 }
 
+function renderChecklistDetailItems() {
+  if (
+    !currentChecklistResults.length
+  ) {
+    checklistDetailTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="3"
+          class="checklist-detail-empty"
+        >
+          저장된 점검 항목이 없습니다.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  const ratingLabels = {
+    poor: "불량",
+    fair: "보통",
+    good: "양호",
+    completed: "기존 완료",
+    incomplete: "미완료",
+  };
+
+  checklistDetailTableBody.innerHTML =
+    currentChecklistResults
+      .map((item, index) => {
+        if (isChecklistEditing) {
+          return `
+            <tr>
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  item.label
+                )}
+              </td>
+
+              <td>
+                <select
+                  class="checklist-detail-rating-select"
+                  data-checklist-rating-index="${index}"
+                >
+                  <option
+                    value="poor"
+                    ${
+                      item.rating === "poor"
+                        ? "selected"
+                        : ""
+                    }
+                  >
+                    불량
+                  </option>
+
+                  <option
+                    value="fair"
+                    ${
+                      item.rating === "fair"
+                        ? "selected"
+                        : ""
+                    }
+                  >
+                    보통
+                  </option>
+
+                  <option
+                    value="good"
+                    ${
+                      item.rating === "good"
+                        ? "selected"
+                        : ""
+                    }
+                  >
+                    양호
+                  </option>
+                </select>
+              </td>
+            </tr>
+          `;
+        }
+
+        return `
+          <tr>
+            <td>
+              ${index + 1}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                item.label
+              )}
+            </td>
+
+            <td>
+              <span
+                class="checklist-result ${escapeHtml(
+                  item.rating
+                )}"
+              >
+                ${escapeHtml(
+                  ratingLabels[
+                    item.rating
+                  ] ||
+                  item.rating
+                )}
+              </span>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+}
+
+
+function setChecklistEditMode(
+  editing
+) {
+  isChecklistEditing =
+    editing;
+
+  checklistDetailNote.hidden =
+    editing;
+
+  checklistDetailNoteInput.hidden =
+    !editing;
+
+  checklistDetailEditBtn.hidden =
+    editing;
+
+  checklistDetailEditCancelBtn.hidden =
+    !editing;
+
+  checklistDetailSaveBtn.hidden =
+    !editing;
+
+  checklistDetailPrintBtn.hidden =
+    editing;
+
+  checklistDetailCancelBtn.hidden =
+    editing;
+
+  checklistDetailPhotoEditTools.hidden =
+    !editing;
+
+  checklistDetailPendingPhotoList.hidden =
+    !editing ||
+    pendingChecklistPhotos.length === 0;
+
+  if (!editing) {
+    pendingChecklistPhotos.forEach(
+      (photo) => {
+        if (photo.previewUrl) {
+          URL.revokeObjectURL(
+            photo.previewUrl
+          );
+        }
+      }
+    );
+
+    pendingChecklistPhotos = [];
+
+    checklistDetailPhotoInput.value =
+      "";
+
+    checklistDetailPendingPhotoCount
+      .textContent =
+        "추가할 사진 없음";
+
+    checklistDetailPendingPhotoList
+      .innerHTML = "";
+  }
+
+  if (editing) {
+    checklistDetailNoteInput.value =
+      openedChecklistSubmission
+        ?.note || "";
+  }
+
+  renderChecklistDetailItems();
+}
+
+
+function startChecklistEditing() {
+  if (
+    !openedChecklistSubmission
+  ) {
+    return;
+  }
+
+  setChecklistEditMode(true);
+}
+
+
+function cancelChecklistEditing() {
+  if (
+    !openedChecklistSubmission
+  ) {
+    return;
+  }
+
+  currentChecklistResults =
+    getSubmissionItemResults(
+      openedChecklistSubmission
+        .checked_items
+    );
+
+  checklistDetailNoteInput.value =
+    openedChecklistSubmission
+      .note || "";
+
+  setChecklistEditMode(false);
+}
+
 async function openChecklistSubmissionDetail(
   submissionId
 ) {
@@ -2007,10 +2281,19 @@ async function openChecklistSubmissionDetail(
   openedChecklistSubmissionId =
     String(submission.id);
 
-  const results =
+  openedChecklistSubmission =
+    submission;
+
+  currentChecklistResults =
     getSubmissionItemResults(
       submission.checked_items
     );
+
+  isChecklistEditing =
+    false;
+
+  const results =
+    currentChecklistResults;
 
   const poorCount =
     results.filter(
@@ -2052,6 +2335,12 @@ async function openChecklistSubmissionDetail(
   checklistDetailPrintBtn.onclick =
     printChecklistSubmissionDetail;
 
+  checklistDetailEditBtn.onclick =
+    startChecklistEditing;
+
+  checklistDetailEditCancelBtn.onclick =
+    cancelChecklistEditing;
+
   checklistDetailModal.onclick =
     (event) => {
       if (
@@ -2089,65 +2378,7 @@ async function openChecklistSubmissionDetail(
     submission.note ||
     "메모 없음";
 
-  if (!results.length) {
-    checklistDetailTableBody.innerHTML = `
-      <tr>
-        <td
-          colspan="3"
-          class="checklist-detail-empty"
-        >
-          저장된 점검 항목이 없습니다.
-        </td>
-      </tr>
-    `;
-  } else {
-    checklistDetailTableBody.innerHTML =
-      results
-        .map(
-          (
-            item,
-            index
-          ) => {
-            const ratingLabels = {
-              poor: "불량",
-              fair: "보통",
-              good: "양호",
-              completed: "기존 완료",
-              incomplete: "미완료",
-            };
-
-            return `
-              <tr>
-                <td>
-                  ${index + 1}
-                </td>
-
-                <td>
-                  ${escapeHtml(
-                    item.label
-                  )}
-                </td>
-
-                <td>
-                  <span
-                    class="checklist-result ${escapeHtml(
-                      item.rating
-                    )}"
-                  >
-                    ${escapeHtml(
-                      ratingLabels[
-                        item.rating
-                      ] ||
-                      item.rating
-                    )}
-                  </span>
-                </td>
-              </tr>
-            `;
-          }
-        )
-        .join("");
-    }
+  renderChecklistDetailItems();
 
   checklistDetailModal.classList.add(
     "open"
@@ -2164,6 +2395,14 @@ async function openChecklistSubmissionDetail(
 }
 
 function closeChecklistSubmissionDetail() {
+  isChecklistEditing =
+    false;
+
+  openedChecklistSubmission =
+    null;
+
+  currentChecklistResults = [];
+
   openedChecklistSubmissionId =
     null;
 
