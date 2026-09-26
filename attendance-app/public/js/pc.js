@@ -1,3 +1,6 @@
+import {
+  applyAdminDesign,
+} from "./admin-design.js";
 import supabase from "./supabase.js";
 
 import {
@@ -223,6 +226,8 @@ if (adminSidebar) {
 
 const adminLogoutBtn =
   document.getElementById("adminLogoutBtn");
+  
+applyAdminDesign();
 
 adminLogoutBtn?.addEventListener(
   "click",
