@@ -1714,51 +1714,26 @@ function printWorkplaceMonthlyAttendance(workplaceId) {
       )
   );
 
-  attendanceRecords
-    .filter((record) =>
-      String(record.workplace_id) === String(workplaceId)
-    )
-    .forEach((record) => {
-      assignedUserIds.add(
-        String(record.user_id)
-      );
-    });
-
   const targetEmployees =
     employees
       .filter((employee) => {
-        /*
-          비활성 직원은 과거 기록이 있어도
-          출력 대상에서 제외합니다.
-        */
+        // 활성 직원만 출력합니다.
         if (employee.status !== "active") {
           return false;
         }
 
-        /*
-          관리자 권한은 선택한 달에 해당 현장에서
-          실제 출근한 기록이 있을 때만 포함합니다.
-        */
-        if (
-          employee.app_role === "checklist_admin"
-        ) {
-          return attendanceRecords.some((record) =>
-            String(record.user_id) ===
-              String(employee.id) &&
-            String(record.workplace_id) ===
-              String(workplaceId) &&
-            Boolean(record.check_in_time)
-          );
-        }
-
+        // 권한과 관계없이 해당 현장에 배정된 직원만 출력합니다.
         return assignedUserIds.has(
           String(employee.id)
         );
       })
       .sort((a, b) =>
-        a.name.localeCompare(b.name, "ko")
+        String(a.name || "").localeCompare(
+          String(b.name || ""),
+          "ko"
+        )
       );
-
+      
   if (!targetEmployees.length) {
     alert(
       "선택한 현장에 출력할 직원이 없습니다."

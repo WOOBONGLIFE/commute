@@ -341,31 +341,6 @@
           </div>
 
           <div
-            id="checklistDetailPhotoEditTools"
-            class="checklist-detail-photo-edit-tools"
-            hidden
-          >
-            <label
-              for="checklistDetailPhotoInput"
-              class="checklist-detail-photo-add-button"
-            >
-              사진 추가
-            </label>
-
-            <input
-              id="checklistDetailPhotoInput"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              hidden
-            />
-
-            <span id="checklistDetailPendingPhotoCount">
-              추가할 사진 없음
-            </span>
-          </div>
-
-          <div
             id="checklistDetailPendingPhotoList"
             class="checklist-detail-pending-photo-list"
             hidden
@@ -398,12 +373,38 @@
           수정 취소
         </button>
 
+        
         <button
           id="checklistDetailEditBtn"
           type="button"
         >
           수정
         </button>
+
+                  <div
+            id="checklistDetailPhotoEditTools"
+            class="checklist-detail-photo-edit-tools"
+            hidden
+          >
+            <label
+              for="checklistDetailPhotoInput"
+              class="checklist-detail-photo-add-button"
+            >
+              사진 추가
+            </label>
+
+            <input
+              id="checklistDetailPhotoInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              hidden
+            />
+
+            <span id="checklistDetailPendingPhotoCount">
+              추가할 사진 없음
+            </span>
+          </div>
 
         <button
           id="checklistDetailSaveBtn"

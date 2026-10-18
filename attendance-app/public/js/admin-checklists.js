@@ -1455,9 +1455,7 @@ function renderChecklistDetailPhotos() {
   checklistDetailPhotoCount.textContent =
     `${currentChecklistPhotos.length}장`;
 
-  if (
-    currentChecklistPhotos.length === 0
-  ) {
+  if (!currentChecklistPhotos.length) {
     checklistDetailPhotoList.innerHTML = `
       <p class="checklist-detail-photo-empty">
         첨부된 사진이 없습니다.
@@ -1475,14 +1473,11 @@ function renderChecklistDetailPhotos() {
           photo.file_name ||
           `현장사진-${index + 1}.jpg`;
 
-        const photoCaption =
-          String(
-            photo.photo_caption || ""
-          ).trim();
+        const caption =
+          String(photo.photo_caption || "").trim();
 
         const displayName =
-          photoCaption ||
-          `사진 ${index + 1}`;
+          caption || `사진 ${index + 1}`;
 
         const fileSize =
           photo.file_size ??
@@ -1494,18 +1489,14 @@ function renderChecklistDetailPhotos() {
             ? `
               <a
                 class="checklist-detail-photo-preview"
-                href="${escapeHtml(
-                  photo.signedUrl
-                )}"
+                href="${escapeHtml(photo.signedUrl)}"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="사진 크게 보기"
               >
                 <img
-                  src="${escapeHtml(
-                    photo.signedUrl
-                  )}"
-                  alt="현장 사진 ${index + 1}"
+                  src="${escapeHtml(photo.signedUrl)}"
+                  alt="${escapeHtml(displayName)}"
                   loading="eager"
                 >
               </a>
@@ -1516,37 +1507,62 @@ function renderChecklistDetailPhotos() {
               </div>
             `;
 
+        const captionEditor =
+          isChecklistEditing
+            ? `
+              <div class="checklist-photo-caption-editor">
+                <label>
+                  사진 이름
+
+                  <input
+                    type="text"
+                    maxlength="200"
+                    value="${escapeHtml(caption)}"
+                    placeholder="예: 2층 복도 청소 완료"
+                    data-photo-caption-input
+                  >
+                </label>
+
+                <button
+                  type="button"
+                  data-photo-caption-save="${escapeHtml(photo.id)}"
+                >
+                  이름 저장
+                </button>
+
+                <span
+                  class="checklist-photo-caption-message"
+                  role="status"
+                  aria-live="polite"
+                ></span>
+              </div>
+            `
+            : "";
+
         return `
           <article class="checklist-detail-photo-card">
             ${previewContent}
 
             <div class="checklist-detail-photo-info">
               <div>
-                <strong title="${escapeHtml(
-                  displayName
-                )}">
-                  ${escapeHtml(
-                    displayName
-                  )}
+                <strong
+                  data-photo-display-name
+                  title="${escapeHtml(displayName)}"
+                >
+                  ${escapeHtml(displayName)}
                 </strong>
 
                 <small>
-                  ${escapeHtml(
-                    originalName
-                  )}
+                  ${escapeHtml(originalName)}
                   ·
-                  ${formatPhotoFileSize(
-                    fileSize
-                  )}
+                  ${formatPhotoFileSize(fileSize)}
                 </small>
               </div>
 
               <div class="checklist-detail-photo-actions">
                 <button
                   type="button"
-                  data-checklist-photo-download="${escapeHtml(
-                    photo.id
-                  )}"
+                  data-checklist-photo-download="${escapeHtml(photo.id)}"
                 >
                   다운로드
                 </button>
@@ -1554,54 +1570,156 @@ function renderChecklistDetailPhotos() {
                 <button
                   type="button"
                   class="photo-delete-button"
-                  data-checklist-photo-delete="${escapeHtml(
-                    photo.id
-                  )}"
+                  data-checklist-photo-delete="${escapeHtml(photo.id)}"
                 >
                   삭제
                 </button>
               </div>
             </div>
+
+            ${captionEditor}
           </article>
         `;
       })
       .join("");
 
   checklistDetailPhotoList
-    .querySelectorAll(
-      "[data-checklist-photo-download]"
-    )
+    .querySelectorAll("[data-checklist-photo-download]")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        async () => {
-          await downloadChecklistPhoto(
-            button.dataset
-              .checklistPhotoDownload,
-            button
-          );
-        }
-      );
-    });
-
-    checklistDetailPhotoList
-  .querySelectorAll(
-    "[data-checklist-photo-delete]"
-  )
-  .forEach((button) => {
-    button.addEventListener(
-      "click",
-      async () => {
-        await deleteChecklistPhoto(
-          button.dataset
-            .checklistPhotoDelete,
+      button.addEventListener("click", async () => {
+        await downloadChecklistPhoto(
+          button.dataset.checklistPhotoDownload,
           button
         );
-      }
-    );
-  });
-}
+      });
+    });
 
+  checklistDetailPhotoList
+    .querySelectorAll("[data-checklist-photo-delete]")
+    .forEach((button) => {
+      button.addEventListener("click", async () => {
+        await deleteChecklistPhoto(
+          button.dataset.checklistPhotoDelete,
+          button
+        );
+      });
+    });
+
+  checklistDetailPhotoList
+    .querySelectorAll("[data-photo-caption-save]")
+    .forEach((button) => {
+      button.addEventListener("click", async () => {
+        const photoId =
+          button.dataset.photoCaptionSave;
+
+        const submissionId =
+          openedChecklistSubmissionId;
+
+        const photoIndex =
+          currentChecklistPhotos.findIndex(
+            (photo) =>
+              String(photo.id) === String(photoId)
+          );
+
+        const photo =
+          currentChecklistPhotos[photoIndex];
+
+        const card =
+          button.closest(".checklist-detail-photo-card");
+
+        const input =
+          card?.querySelector("[data-photo-caption-input]");
+
+        const message =
+          card?.querySelector(
+            ".checklist-photo-caption-message"
+          );
+
+        if (
+          !isChecklistEditing ||
+          !submissionId ||
+          !photo ||
+          !input ||
+          !message
+        ) {
+          return;
+        }
+
+        const caption =
+          input.value.trim();
+
+        button.disabled = true;
+        input.disabled = true;
+        button.textContent = "저장 중...";
+        message.textContent = "";
+
+        try {
+          const { data, error } =
+            await supabase.rpc(
+              "admin_update_checklist_photo_caption",
+              {
+                p_photo_id: photoId,
+                p_submission_id: submissionId,
+                p_caption: caption,
+              }
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data?.id) {
+            throw new Error(
+              "사진 이름 저장 결과를 확인하지 못했습니다."
+            );
+          }
+
+          photo.photo_caption =
+            data.photo_caption ?? null;
+
+          const displayName =
+            photo.photo_caption ||
+            `사진 ${photoIndex + 1}`;
+
+          const title =
+            card.querySelector("[data-photo-display-name]");
+
+          const image =
+            card.querySelector("img");
+
+          if (title) {
+            title.textContent = displayName;
+            title.title = displayName;
+          }
+
+          if (image) {
+            image.alt = displayName;
+          }
+
+          input.value =
+            photo.photo_caption || "";
+
+          message.textContent =
+            "저장되었습니다.";
+        } catch (error) {
+          console.error(
+            "사진 이름 저장 실패:",
+            error
+          );
+
+          message.textContent =
+            `저장 실패: ${
+              error.message ||
+              "잠시 후 다시 시도해 주세요."
+            }`;
+        } finally {
+          button.disabled = false;
+          input.disabled = false;
+          button.textContent = "이름 저장";
+        }
+      });
+    });
+}
 
 async function loadChecklistDetailPhotos(
   submissionId
@@ -2230,6 +2348,7 @@ function setChecklistEditMode(
   }
 
   renderChecklistDetailItems();
+  renderChecklistDetailPhotos();
 }
 
 

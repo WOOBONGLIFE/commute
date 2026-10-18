@@ -2136,3 +2136,193 @@ body[data-admin-page="requests"]
   background: #f8fafc;
   color: #111827;
 }
+
+/* 청소점검표 목록 가로 스크롤 */
+@media screen {
+  body[data-admin-page="checklists"] .main,
+  body[data-admin-page="checklists"] .content,
+  body[data-admin-page="checklists"] .panel {
+    min-width: 0;
+  }
+
+  body[data-admin-page="checklists"]
+  .attendance-table-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  body[data-admin-page="checklists"]
+  .workflow-submission-table {
+    width: 100% !important;
+    min-width: 1100px !important;
+  }
+
+  body[data-admin-page="checklists"]
+  .attendance-table-wrap::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  body[data-admin-page="checklists"]
+  .attendance-table-wrap::-webkit-scrollbar-track {
+    background: #eef2f6;
+    border-radius: 999px;
+  }
+
+  body[data-admin-page="checklists"]
+  .attendance-table-wrap::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border: 2px solid #eef2f6;
+    border-radius: 999px;
+  }
+
+  /* 하단 버튼 영역 */
+  #checklistDetailModal .checklist-detail-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #checklistDetailPhotoEditTools {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  #checklistDetailPhotoEditTools[hidden] {
+    display: none !important;
+  }
+
+  #checklistDetailPhotoEditTools
+  .checklist-detail-photo-add-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    margin: 0;
+    padding: 9px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #checklistDetailPhotoEditTools
+  .checklist-detail-photo-add-button:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+  }
+
+  #checklistDetailPendingPhotoCount {
+    color: #64748b;
+    font-size: 12px;
+  }
+
+  /* 기존 사진별 이름 수정 */
+  .checklist-photo-caption-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  .checklist-photo-caption-editor label {
+    display: grid;
+    min-width: 0;
+    gap: 6px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .checklist-photo-caption-editor input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    font: inherit;
+    font-size: 14px;
+  }
+
+  .checklist-photo-caption-editor input:focus {
+    outline: 2px solid #93c5fd;
+    outline-offset: 1px;
+    border-color: #2563eb;
+  }
+
+  .checklist-photo-caption-editor button {
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .checklist-photo-caption-editor button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .checklist-photo-caption-message {
+    grid-column: 1 / -1;
+    color: #475569;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* 이름 입력창과 편집 버튼은 인쇄 제외 */
+@media print {
+  .checklist-photo-caption-editor,
+  #checklistDetailPhotoEditTools {
+    display: none !important;
+  }
+}
+
+@media screen {
+  #checklistDetailModal .checklist-detail-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #checklistDetailModal #checklistDetailPhotoEditTools {
+    order: -1;
+    margin-right: auto;
+    margin-left: 0;
+  }
+
+  #checklistDetailModal #checklistDetailPhotoEditTools[hidden] {
+    display: none !important;
+  }
+}
